@@ -1,17 +1,10 @@
 const express = require('express')
 const expressHandlebars  = require('express-handlebars')
+const database = require('./Database')
+const ref = database.ref('ads')
 
-const state = require('./initialState')
 const port = 444
 const app = express()
-
-console.log('Initial state: ', state)
-
-let imageUrlArray = []
-Object.keys(state).forEach(function(skuId) {
-  imageUrlArray.push(state[skuId].imageUrl)
-})
-console.log(imageUrlArray)
 
 app.engine('handlebars', expressHandlebars())
 app.set('view engine', 'handlebars')
@@ -25,29 +18,79 @@ app.use(function(req, res, next) {
   next()
 })
 
-app.get('/product/:skuId/images', function(req, res, next) {
+app.get('/product/:skuId', function(req, res, next) {
   const skuId = req.params.skuId
+
+  ref.once('value', function(snapshot) {
+    const value = snapshot.val()[skuId]
+    res.send(value)
+  }, function (error) {
+    res.status(500).send(error)
+  })
 })
 
 app.post('/product/:skuId/image', function(req, res, next) {
-  const imageUrl = req.query.url
+  console.log('Product update endpoint hit')
+  const imageUrl = req.query.imageUrl
+  const bdUrl = req.query.bdUrl
   const skuId = req.params.skuId
-  console.log(skuId, imageUrl)
-  if (!state[skuId]) {
-    state.skyId = {
-      url: imageUrl,
-      referralIds: []
-    }
-  }
+
+  ref.child(skuId).set({
+    imageUrl: imageUrl,
+    bdUrl: bdUrl,
+    referralIds: [],
+    hitCount: 0
+  })
+
+  res.send()
 })
 
-app.get('/ad', function(req, res, next) {
-  var randomImageUrl = imageUrlArray[Math.floor(Math.random() * imageUrlArray.length)];
-  const referralId = 'asdf'
+function pickRandomProperty(obj) {
+  var result
+  var count = 0
+  for (var prop in obj)
+    if (Math.random() < 1/++count)
+      result = prop
+  return result
+}
 
-  res.render('ad', {
-    url: randomImageUrl,
-    referralId: referralId
+function generateReferralId() {
+  var text = ''
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+  for(var i=0; i<10; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length))
+
+  return text
+}
+
+app.get('/ad', function(req, res, next) {
+  ref.once('value', function(snapshot) {
+    const adObjectObjects = snapshot.val()
+
+    const randomSku = pickRandomProperty(adObjectObjects)
+    const randomAdObject = adObjectObjects[randomSku]
+
+    const randomAdImageUrl = randomAdObject.imageUrl
+    const randomAdBDUrl = randomAdObject.bdUrl
+    const referralId = generateReferralId()
+
+    const updatedAdObject = randomAdObject
+    updatedAdObject.hitCount ++
+    if (!updatedAdObject.referralIds) {
+      updatedAdObject.referralIds = [referralId]
+    } else {
+      updatedAdObject.referralIds.push(referralId)
+    }
+    ref.child(randomSku).update(updatedAdObject)
+
+    res.render('ad', {
+      imageUrl: randomAdImageUrl,
+      bdUrl: randomAdBDUrl,
+      referralId: referralId
+    })
+  }, function (error) {
+    res.status(500).send(error)
   })
 })
 
