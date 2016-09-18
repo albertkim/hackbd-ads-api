@@ -13,33 +13,34 @@ app.use('/public', express.static('public'))
 
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin', 'Origin, X-Requested-With, Content-Type, Accept, access_token, Authorization')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, access_token, Authorization')
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
   next()
 })
 
-app.get('/product/:skuId', function(req, res, next) {
-  const skuId = req.params.skuId
+app.get('/product/:skuNumber', function(req, res, next) {
+  const skuNumber = req.params.skuNumber
 
   ref.once('value', function(snapshot) {
-    const value = snapshot.val()[skuId]
+    const value = snapshot.val()[skuNumber]
     res.send(value)
   }, function (error) {
     res.status(500).send(error)
   })
 })
 
-app.post('/product/:skuId/image', function(req, res, next) {
+app.post('/product/:skuNumber/image', function(req, res, next) {
   console.log('Product update endpoint hit')
   const imageUrl = req.query.imageUrl
   const bdUrl = req.query.bdUrl
-  const skuId = req.params.skuId
+  const skuNumber = req.params.skuNumber
 
-  ref.child(skuId).set({
+  ref.child(skuNumber).set({
     imageUrl: imageUrl,
     bdUrl: bdUrl,
     referralIds: [],
-    hitCount: 0
+    hitCount: 0,
+    clickCount: 0
   })
 
   res.send()
@@ -87,8 +88,23 @@ app.get('/ad', function(req, res, next) {
     res.render('ad', {
       imageUrl: randomAdImageUrl,
       bdUrl: randomAdBDUrl,
-      referralId: referralId
+      referralId: referralId,
+      skuNumber: randomSku
     })
+  }, function (error) {
+    res.status(500).send(error)
+  })
+})
+
+app.put('/ad/:skuNumber', function(req, res, next) {
+  const skuNumber = req.params.skuNumber
+
+  ref.once('value', function(snapshot) {
+    const adObjectObjects = snapshot.val()
+    const clickCount = adObjectObjects[skuNumber].clickCount
+    ref.child(skuNumber).update({'clickCount': clickCount+1})
+
+    res.send()
   }, function (error) {
     res.status(500).send(error)
   })

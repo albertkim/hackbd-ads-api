@@ -1,1 +1,19 @@
-<a href="{{bdUrl}}"><img src="{{imageUrl}}" referralId="{{referralId}}" width=700px height=150px /></a>
+<img src="{{imageUrl}}" referralId="{{referralId}}" onclick="clickThrough()" width=728px height=90px />
+
+<script   src="https://code.jquery.com/jquery-3.1.0.min.js"   integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="   crossorigin="anonymous"></script>
+<script>
+  function clickThrough() {
+    var win = window.open('{{bdUrl}}', '_blank');
+    win.focus();
+    
+    $.ajax({
+      url: 'http://localhost:444/ad/{{skuNumber}}',
+      method: 'PUT',
+      crossDomain: true
+    }).done(function(response){
+      console.log('hi');
+    }).fail(function(error){
+      console.log(error);
+    });
+  }
+</script>
