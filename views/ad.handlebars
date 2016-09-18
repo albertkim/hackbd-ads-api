@@ -1,11 +1,11 @@
-<img src="{{imageUrl}}" referralId="{{referralId}}" onclick="clickThrough()" width=728px height=90px />
+<img src="{{imageUrl}}" referralId="{{referralId}}" onclick="clickThrough()" width=728px height=90px style="margin: 3em;" />
 
 <script   src="https://code.jquery.com/jquery-3.1.0.min.js"   integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="   crossorigin="anonymous"></script>
 <script>
   function clickThrough() {
     var win = window.open('{{bdUrl}}', '_blank');
     win.focus();
-    
+
     $.ajax({
       url: 'http://localhost:444/ad/{{skuNumber}}',
       method: 'PUT',
