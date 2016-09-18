@@ -1,15 +1,15 @@
 const express = require('express')
 const expressHandlebars  = require('express-handlebars')
 
-const initalState = require('./initalState')
+const state = require('./initialState')
 const port = 444
 const app = express()
 
-console.log(initalState)
+console.log('Initial state: ', state)
 
 let imageUrlArray = []
-Object.keys(initalState).forEach(function(skuId) {
-  imageUrlArray.push(initalState[skuId].imageUrl)
+Object.keys(state).forEach(function(skuId) {
+  imageUrlArray.push(state[skuId].imageUrl)
 })
 console.log(imageUrlArray)
 
@@ -25,12 +25,20 @@ app.use(function(req, res, next) {
   next()
 })
 
-app.get('/product/:productId/images', function(req, res, next) {
-
+app.get('/product/:skuId/images', function(req, res, next) {
+  const skuId = req.params.skuId
 })
 
-app.post('/product/:productId/image', function(req, res, next) {
-
+app.post('/product/:skuId/image', function(req, res, next) {
+  const imageUrl = req.query.url
+  const skuId = req.params.skuId
+  console.log(skuId, imageUrl)
+  if (!state[skuId]) {
+    state.skyId = {
+      url: imageUrl,
+      referralIds: []
+    }
+  }
 })
 
 app.get('/ad', function(req, res, next) {
